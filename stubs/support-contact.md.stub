@@ -1,0 +1,15 @@
+---
+id: {{UUID}}
+blueprint: pages
+title: 'Contact Support'
+sections:
+  -
+    id: support-form-section
+    type: support_form_section
+    enabled: true
+seo:
+  description: 'Contact support for help with your questions or issues. Submit a support ticket and our team will respond as soon as possible.'
+  image: '@seo:image'
+updated_by: 1
+updated_at: {{TIMESTAMP}}
+---
