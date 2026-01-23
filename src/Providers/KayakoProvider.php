@@ -96,29 +96,36 @@ class KayakoProvider implements SupportProvider
     protected function findOrCreateRequester(string $email, string $name): array
     {
         // Search for existing user by email
-        $searchResponse = Http::withBasicAuth($this->email, $this->password)
-            ->timeout($this->timeout)
-            ->get("{$this->baseUrl}/api/v1/users.json", [
-                'email' => $email,
-            ]);
+        // Note: Kayako's GET /users.json doesn't filter by email, so we skip the search
+        // and just create the user. Kayako will return an error if the email exists,
+        // which we handle below.
 
-        if ($searchResponse->successful()) {
-            $users = $searchResponse->json('data', []);
-            if (!empty($users)) {
-                return ['id' => $users[0]['id']];
-            }
-        }
 
         // Create new user if not found
+        Log::info('Kayako creating new user', ['email' => $email, 'name' => $name]);
+
         $createResponse = Http::withBasicAuth($this->email, $this->password)
             ->timeout($this->timeout)
             ->post("{$this->baseUrl}/api/v1/users.json", [
                 'full_name' => $name,
-                'emails' => [['email' => $email, 'is_primary' => true]],
+                'email' => $email,
+                'role_id' => $this->config['customer_role_id'] ?? 4,
             ]);
 
+        Log::info('Kayako user create response', [
+            'status' => $createResponse->status(),
+            'successful' => $createResponse->successful(),
+            'body' => $createResponse->body(),
+        ]);
+
         if ($createResponse->successful()) {
-            return ['id' => $createResponse->json('data.id')];
+            $newUserId = $createResponse->json('data.id');
+            Log::info('Kayako user created', [
+                'email' => $email,
+                'name' => $name,
+                'new_user_id' => $newUserId,
+            ]);
+            return ['id' => $newUserId];
         }
 
         Log::error('Failed to find or create Kayako requester', [
