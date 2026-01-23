@@ -4,7 +4,6 @@ namespace Acoustica\StatamicSupport;
 
 use Acoustica\StatamicSupport\Contracts\SupportProvider;
 use Acoustica\StatamicSupport\Listeners\HandleSupportFormSubmission;
-use Acoustica\StatamicSupport\Providers\KayakoProvider;
 use Acoustica\StatamicSupport\Providers\NullProvider;
 use Acoustica\StatamicSupport\Services\SpamValidationService;
 use Illuminate\Support\Facades\Event;
@@ -15,17 +14,25 @@ class SupportServiceProvider extends AddonServiceProvider
 {
     protected $viewNamespace = 'statamic-support';
 
+    protected $commands = [
+        Console\InstallCommand::class,
+    ];
+
+    protected $listen = [
+        FormSubmitted::class => [
+            HandleSupportFormSubmission::class,
+        ],
+    ];
+
     public function bootAddon()
     {
-        $this->bootConfig();
-        $this->bootViews();
-        $this->bootPublishables();
-        $this->bootEventListeners();
-        $this->bootCommands();
+        $this->registerPublishables();
     }
 
     public function register()
     {
+        parent::register();
+
         $this->mergeConfigFrom(__DIR__ . '/../config/support.php', 'support');
 
         $this->app->singleton(SpamValidationService::class, function ($app) {
@@ -56,16 +63,11 @@ class SupportServiceProvider extends AddonServiceProvider
         return new $providerClass($providerConfig);
     }
 
-    protected function bootConfig()
+    protected function registerPublishables()
     {
         $this->publishes([
             __DIR__ . '/../config/support.php' => config_path('support.php'),
         ], 'statamic-support-config');
-    }
-
-    protected function bootViews()
-    {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'statamic-support');
 
         $this->publishes([
             __DIR__ . '/../resources/views' => resource_path('views/vendor/statamic-support'),
@@ -82,10 +84,7 @@ class SupportServiceProvider extends AddonServiceProvider
         $this->publishes([
             __DIR__ . '/../resources/fieldsets' => resource_path('fieldsets'),
         ], 'statamic-support-fieldsets');
-    }
 
-    protected function bootPublishables()
-    {
         $this->publishes([
             __DIR__ . '/../config/support.php' => config_path('support.php'),
             __DIR__ . '/../resources/views' => resource_path('views/vendor/statamic-support'),
@@ -93,19 +92,5 @@ class SupportServiceProvider extends AddonServiceProvider
             __DIR__ . '/../resources/forms' => resource_path('forms'),
             __DIR__ . '/../resources/fieldsets' => resource_path('fieldsets'),
         ], 'statamic-support');
-    }
-
-    protected function bootEventListeners()
-    {
-        Event::listen(FormSubmitted::class, HandleSupportFormSubmission::class);
-    }
-
-    protected function bootCommands()
-    {
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                Console\InstallCommand::class,
-            ]);
-        }
     }
 }
