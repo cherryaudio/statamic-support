@@ -3,6 +3,7 @@
 namespace Acoustica\StatamicSupport\Listeners;
 
 use Acoustica\StatamicSupport\Contracts\SupportProvider;
+use Acoustica\StatamicSupport\Jobs\SubmitToKayakoJob;
 use Acoustica\StatamicSupport\Services\SpamValidationService;
 use Illuminate\Support\Facades\Log;
 use Statamic\Events\FormSubmitted;
@@ -57,25 +58,14 @@ class HandleSupportFormSubmission
             return;
         }
 
-        // Submit to provider
-        try {
-            $response = $this->provider->createCase($mappedData);
+        // Dispatch job to queue for async processing
+        $queue = config('support.queue', 'default');
+        SubmitToKayakoJob::dispatch($mappedData)->onQueue($queue);
 
-            Log::info('Support: case created', [
-                'provider' => $this->provider->getName(),
-                'case_id' => $response['id'] ?? 'unknown',
-                'email' => $mappedData['email'],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Support: failed to create case', [
-                'provider' => $this->provider->getName(),
-                'error' => $e->getMessage(),
-                'email' => $mappedData['email'],
-            ]);
-
-            // Don't throw - let the form submission succeed
-            // The submission will be saved locally as backup
-        }
+        Log::info('Support: submission queued for processing', [
+            'email' => $mappedData['email'],
+            'queue' => $queue,
+        ]);
     }
 
     /**
