@@ -49,6 +49,7 @@ class KayakoProvider implements SupportProvider
             'requester_id' => $requester['id'],
             'channel' => $this->config['channel'] ?? 'MAIL',
             'channel_id' => $this->config['channel_id'] ?? 1,
+            'channel_options' => json_encode(['html' => true]),
         ];
 
         if (isset($data['priority'])) {
@@ -191,17 +192,17 @@ class KayakoProvider implements SupportProvider
 
     protected function formatContents(array $data): string
     {
-        $contents = $data['message'];
+        $contents = e($data['message']);
 
         $contents .= "\n\n---\nSubmitted via Support Contact Form";
-        $contents .= "\nName: " . $data['name'];
-        $contents .= "\nEmail: " . $data['email'];
+        $contents .= "\nName: " . e($data['name']);
+        $contents .= "\nEmail: " . e($data['email']);
 
         if (isset($data['priority'])) {
-            $contents .= "\nPriority: " . $data['priority'];
+            $contents .= "\nPriority: " . e($data['priority']);
         }
 
-        return $contents;
+        return nl2br($contents);
     }
 
     protected function mapPriorityToId(string $priority): int
