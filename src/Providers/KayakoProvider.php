@@ -95,13 +95,6 @@ class KayakoProvider implements SupportProvider
 
     protected function findOrCreateRequester(string $email, string $name): array
     {
-        // Search for existing user by email
-        // Note: Kayako's GET /users.json doesn't filter by email, so we skip the search
-        // and just create the user. Kayako will return an error if the email exists,
-        // which we handle below.
-
-
-        // Create new user if not found
         Log::info('Kayako creating new user', ['email' => $email, 'name' => $name]);
 
         $createResponse = Http::withBasicAuth($this->email, $this->password)
@@ -111,12 +104,6 @@ class KayakoProvider implements SupportProvider
                 'email' => $email,
                 'role_id' => $this->config['customer_role_id'] ?? 4,
             ]);
-
-        Log::info('Kayako user create response', [
-            'status' => $createResponse->status(),
-            'successful' => $createResponse->successful(),
-            'body' => $createResponse->body(),
-        ]);
 
         if ($createResponse->successful()) {
             $newUserId = $createResponse->json('data.id');
@@ -128,9 +115,66 @@ class KayakoProvider implements SupportProvider
             return ['id' => $newUserId];
         }
 
+        // If user already exists, search for them by email
+        if ($this->isDuplicateEmailError($createResponse)) {
+            Log::info('Kayako user already exists, searching by email', ['email' => $email]);
+            return $this->searchUserByEmail($email);
+        }
+
         Log::error('Failed to find or create Kayako requester', [
             'email' => $email,
             'response' => $createResponse->body(),
+        ]);
+
+        throw new \Exception('Failed to find or create requester in Kayako');
+    }
+
+    protected function isDuplicateEmailError($response): bool
+    {
+        if ($response->status() !== 400) {
+            return false;
+        }
+
+        $errors = $response->json('errors', []);
+
+        foreach ($errors as $error) {
+            if (($error['code'] ?? '') === 'FIELD_DUPLICATE' && ($error['parameter'] ?? '') === 'email') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function searchUserByEmail(string $email): array
+    {
+        $searchResponse = Http::withBasicAuth($this->email, $this->password)
+            ->timeout($this->timeout)
+            ->get("{$this->baseUrl}/api/v1/users/search.json", [
+                'query' => $email,
+            ]);
+
+        if ($searchResponse->successful()) {
+            $users = $searchResponse->json('data', []);
+
+            foreach ($users as $user) {
+                $userEmails = $user['emails'] ?? [];
+                foreach ($userEmails as $userEmail) {
+                    if (strcasecmp($userEmail['email'] ?? '', $email) === 0) {
+                        Log::info('Kayako found existing user', [
+                            'email' => $email,
+                            'user_id' => $user['id'],
+                        ]);
+                        return ['id' => $user['id']];
+                    }
+                }
+            }
+        }
+
+        Log::error('Kayako user exists but search failed to find them', [
+            'email' => $email,
+            'search_status' => $searchResponse->status(),
+            'search_body' => $searchResponse->body(),
         ]);
 
         throw new \Exception('Failed to find or create requester in Kayako');
