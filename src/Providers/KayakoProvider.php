@@ -148,33 +148,39 @@ class KayakoProvider implements SupportProvider
 
     protected function searchUserByEmail(string $email): array
     {
-        $searchResponse = Http::withBasicAuth($this->email, $this->password)
+        // Kayako v1: POST /api/v1/users/filter.json with predicates
+        $filterResponse = Http::withBasicAuth($this->email, $this->password)
             ->timeout($this->timeout)
-            ->get("{$this->baseUrl}/api/v1/users/search.json", [
-                'query' => $email,
+            ->post("{$this->baseUrl}/api/v1/users/filter.json", [
+                'collections' => [
+                    [
+                        'propositions' => [
+                            [
+                                'field' => 'identityemails.address',
+                                'operator' => 'comparison_equalto',
+                                'value' => $email,
+                            ],
+                        ],
+                    ],
+                ],
             ]);
 
-        if ($searchResponse->successful()) {
-            $users = $searchResponse->json('data', []);
+        if ($filterResponse->successful()) {
+            $users = $filterResponse->json('data', []);
 
-            foreach ($users as $user) {
-                $userEmails = $user['emails'] ?? [];
-                foreach ($userEmails as $userEmail) {
-                    if (strcasecmp($userEmail['email'] ?? '', $email) === 0) {
-                        Log::info('Kayako found existing user', [
-                            'email' => $email,
-                            'user_id' => $user['id'],
-                        ]);
-                        return ['id' => $user['id']];
-                    }
-                }
+            if (!empty($users[0]['id'])) {
+                Log::info('Kayako found existing user via filter', [
+                    'email' => $email,
+                    'user_id' => $users[0]['id'],
+                ]);
+                return ['id' => $users[0]['id']];
             }
         }
 
-        Log::error('Kayako user exists but search failed to find them', [
+        Log::error('Kayako user exists but filter failed to find them', [
             'email' => $email,
-            'search_status' => $searchResponse->status(),
-            'search_body' => $searchResponse->body(),
+            'filter_status' => $filterResponse->status(),
+            'filter_body' => $filterResponse->body(),
         ]);
 
         throw new \Exception('Failed to find or create requester in Kayako');
