@@ -148,17 +148,20 @@ class KayakoProvider implements SupportProvider
 
     protected function searchUserByEmail(string $email): array
     {
-        // Kayako v1: POST /api/v1/users/filter.json with predicates
         $filterResponse = Http::withBasicAuth($this->email, $this->password)
             ->timeout($this->timeout)
             ->post("{$this->baseUrl}/api/v1/users/filter.json", [
-                'collections' => [
-                    [
-                        'propositions' => [
-                            [
-                                'field' => 'identityemails.address',
-                                'operator' => 'comparison_equalto',
-                                'value' => $email,
+                'predicates' => [
+                    'collection_operator' => 'OR',
+                    'collections' => [
+                        [
+                            'proposition_operator' => 'AND',
+                            'propositions' => [
+                                [
+                                    'field' => 'identityemails.address',
+                                    'operator' => 'comparison_equalto',
+                                    'value' => $email,
+                                ],
                             ],
                         ],
                     ],
