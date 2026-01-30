@@ -48,8 +48,11 @@ class HandleSupportFormSubmission
                 'email' => $mappedData['email'] ?? 'unknown',
             ]);
 
-            // Return false to silently discard (appears successful to user)
-            return false;
+            // Mark as spam so staff can review, but skip Kayako dispatch
+            $event->submission->set('is_spam', true);
+            $event->submission->set('spam_reason', $spamResult['reason']);
+
+            return;
         }
 
         // Check if provider is configured
