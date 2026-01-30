@@ -42,8 +42,8 @@ return [
             'url' => env('KAYAKO_URL', 'https://your-instance.kayako.com'),
             'email' => env('KAYAKO_EMAIL'),
             'password' => env('KAYAKO_PASSWORD'),
-            'channel' => env('KAYAKO_CHANNEL', 'NOTE'),
-            //'channel_id' => env('KAYAKO_CHANNEL_ID', 1),
+            'channel' => env('KAYAKO_CHANNEL', 'MAIL'),
+            'channel_id' => env('KAYAKO_CHANNEL_ID', 1),
             'timeout' => env('KAYAKO_TIMEOUT', 30),
             'priority_mapping' => [
                 'low' => 1,

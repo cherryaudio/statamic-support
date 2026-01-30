@@ -7,7 +7,7 @@ use Acoustica\StatamicSupport\Listeners\HandleSupportFormSubmission;
 use Acoustica\StatamicSupport\Providers\NullProvider;
 use Acoustica\StatamicSupport\Services\SpamValidationService;
 use Illuminate\Support\Facades\Event;
-use Statamic\Events\FormSubmitted;
+use Statamic\Events\SubmissionCreated;
 use Statamic\Providers\AddonServiceProvider;
 
 class SupportServiceProvider extends AddonServiceProvider
@@ -19,7 +19,7 @@ class SupportServiceProvider extends AddonServiceProvider
     ];
 
     protected $listen = [
-        FormSubmitted::class => [
+        SubmissionCreated::class => [
             HandleSupportFormSubmission::class,
         ],
     ];

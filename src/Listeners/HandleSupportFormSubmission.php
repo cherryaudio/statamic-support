@@ -6,7 +6,7 @@ use Acoustica\StatamicSupport\Contracts\SupportProvider;
 use Acoustica\StatamicSupport\Jobs\SubmitToKayakoJob;
 use Acoustica\StatamicSupport\Services\SpamValidationService;
 use Illuminate\Support\Facades\Log;
-use Statamic\Events\FormSubmitted;
+use Statamic\Events\SubmissionCreated;
 
 class HandleSupportFormSubmission
 {
@@ -22,10 +22,10 @@ class HandleSupportFormSubmission
     /**
      * Handle the form submission event.
      *
-     * @param FormSubmitted $event
-     * @return bool|void
+     * @param SubmissionCreated $event
+     * @return void
      */
-    public function handle(FormSubmitted $event)
+    public function handle(SubmissionCreated $event)
     {
         $formHandle = config('support.form_handle', 'support_contact');
 
