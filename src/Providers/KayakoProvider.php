@@ -48,6 +48,7 @@ class KayakoProvider implements SupportProvider
             'contents' => $this->formatContents($data),
             'requester_id' => $requester['id'],
             'channel' => $this->config['channel'] ?? 'MAIL',
+            'channel_id' => $this->config['channel_id'] ?? 1,
             'channel_options' => ['html' => true],
         ];
 
