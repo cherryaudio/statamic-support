@@ -149,8 +149,8 @@ SUPPORT_PROVIDER=null
 
 # Kayako configuration (only needed if SUPPORT_PROVIDER=kayako)
 KAYAKO_URL=https://your-instance.kayako.com
-KAYAKO_EMAIL=your-agent@email.com
-KAYAKO_PASSWORD=your-password
+KAYAKO_CLIENT_ID=your-oauth-client-id
+KAYAKO_CLIENT_SECRET=your-oauth-client-secret
 ENV;
 
         $this->line($envVars);

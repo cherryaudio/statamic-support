@@ -40,8 +40,9 @@ return [
         'kayako' => [
             'driver' => KayakoProvider::class,
             'url' => env('KAYAKO_URL', 'https://your-instance.kayako.com'),
-            'email' => env('KAYAKO_EMAIL'),
-            'password' => env('KAYAKO_PASSWORD'),
+            'client_id' => env('KAYAKO_CLIENT_ID'),
+            'client_secret' => env('KAYAKO_CLIENT_SECRET'),
+            'scopes' => env('KAYAKO_SCOPES', 'users conversations'),
             'channel' => env('KAYAKO_CHANNEL', 'MAIL'),
             'channel_id' => env('KAYAKO_CHANNEL_ID', 1),
             'timeout' => env('KAYAKO_TIMEOUT', 30),
