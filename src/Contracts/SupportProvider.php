@@ -13,11 +13,8 @@ interface SupportProvider
      * Create a new support case/ticket.
      *
      * @param array $data Case data including:
-     *   - name: string
      *   - email: string
-     *   - subject: string
      *   - message: string
-     *   - priority: string (optional)
      * @return array Response data with at least 'id' key
      * @throws \Exception If the request fails
      */

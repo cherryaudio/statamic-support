@@ -24,9 +24,7 @@ class NullProvider implements SupportProvider
     public function createCase(array $data): array
     {
         Log::info('Support case created (NullProvider - not sent to external service)', [
-            'name' => $data['name'],
             'email' => $data['email'],
-            'subject' => $data['subject'],
         ]);
 
         return [

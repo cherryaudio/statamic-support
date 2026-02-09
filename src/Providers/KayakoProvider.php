@@ -89,20 +89,16 @@ class KayakoProvider implements SupportProvider
             throw new \Exception('Kayako provider is not configured.');
         }
 
-        $requester = $this->findOrCreateRequester($data['email'], $data['name']);
+        $requester = $this->findOrCreateRequester($data['email']);
 
         $caseData = [
-            'subject' => $data['subject'],
+            'subject' => 'Support Request',
             'contents' => $this->formatContents($data),
             'requester_id' => $requester['id'],
             'channel' => $this->config['channel'] ?? 'MAIL',
             'channel_id' => $this->config['channel_id'] ?? 1,
             'channel_options' => ['html' => true],
         ];
-
-        if (isset($data['priority'])) {
-            $caseData['priority_id'] = $this->mapPriorityToId($data['priority']);
-        }
 
         $response = $this->httpClient()
             ->post("{$this->baseUrl}/api/v1/cases.json", $caseData);
@@ -140,13 +136,13 @@ class KayakoProvider implements SupportProvider
         }
     }
 
-    protected function findOrCreateRequester(string $email, string $name): array
+    protected function findOrCreateRequester(string $email): array
     {
-        Log::info('Kayako creating new user', ['email' => $email, 'name' => $name]);
+        Log::info('Kayako creating new user', ['email' => $email]);
 
         $createResponse = $this->httpClient()
             ->post("{$this->baseUrl}/api/v1/users.json", [
-                'full_name' => $name,
+                'full_name' => $email,
                 'email' => $email,
                 'role_id' => $this->config['customer_role_id'] ?? 4,
             ]);
@@ -155,7 +151,6 @@ class KayakoProvider implements SupportProvider
             $newUserId = $createResponse->json('data.id');
             Log::info('Kayako user created', [
                 'email' => $email,
-                'name' => $name,
                 'new_user_id' => $newUserId,
             ]);
             return ['id' => $newUserId];
@@ -239,25 +234,9 @@ class KayakoProvider implements SupportProvider
         $contents = e($data['message']);
 
         $contents .= "\n\n---\nSubmitted via Support Contact Form";
-        $contents .= "\nName: " . e($data['name']);
         $contents .= "\nEmail: " . e($data['email']);
-
-        if (isset($data['priority'])) {
-            $contents .= "\nPriority: " . e($data['priority']);
-        }
 
         return nl2br($contents);
     }
 
-    protected function mapPriorityToId(string $priority): int
-    {
-        $mapping = $this->config['priority_mapping'] ?? [
-            'low' => 1,
-            'normal' => 2,
-            'high' => 3,
-            'urgent' => 4,
-        ];
-
-        return $mapping[strtolower($priority)] ?? 2;
-    }
 }

@@ -3,20 +3,6 @@ sections:
     display: Main
     fields:
       -
-        handle: name
-        field:
-          input_type: text
-          antlers: false
-          display: 'Your Name'
-          type: text
-          icon: text
-          listable: hidden
-          instructions_position: above
-          visibility: visible
-          validate:
-            - required
-            - 'max:100'
-      -
         handle: email
         field:
           input_type: email
@@ -30,42 +16,6 @@ sections:
           validate:
             - required
             - email
-      -
-        handle: subject
-        field:
-          input_type: text
-          antlers: false
-          display: Subject
-          type: text
-          icon: text
-          listable: hidden
-          instructions_position: above
-          visibility: visible
-          validate:
-            - required
-            - 'max:200'
-      -
-        handle: priority
-        field:
-          options:
-            normal: Normal
-            low: Low
-            high: High
-            urgent: Urgent
-          default: normal
-          multiple: false
-          max_items: 1
-          clearable: false
-          searchable: false
-          taggable: false
-          push_tags: false
-          cast_booleans: false
-          display: Priority
-          type: select
-          icon: select
-          listable: hidden
-          instructions_position: above
-          visibility: visible
       -
         handle: message
         field:

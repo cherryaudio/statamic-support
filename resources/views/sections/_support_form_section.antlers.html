@@ -28,25 +28,6 @@
                     <input type="text" name="honeypot_field" tabindex="-1" autocomplete="off">
                 </div>
 
-                <!-- Name Field -->
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">
-                        Your Name <span class="text-red-600 dark:text-red-400">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        value="{{ old:name }}"
-                        required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Enter your full name"
-                    >
-                    {{ if error:name }}
-                        <p class="mt-1 text-sm text-red-500">{{ error:name }}</p>
-                    {{ /if }}
-                </div>
-
                 <!-- Email Field -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">
@@ -63,45 +44,6 @@
                     >
                     {{ if error:email }}
                         <p class="mt-1 text-sm text-red-500">{{ error:email }}</p>
-                    {{ /if }}
-                </div>
-
-                <!-- Subject Field -->
-                <div>
-                    <label for="subject" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">
-                        Subject <span class="text-red-600 dark:text-red-400">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="subject"
-                        id="subject"
-                        value="{{ old:subject }}"
-                        required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Brief description of your issue"
-                    >
-                    {{ if error:subject }}
-                        <p class="mt-1 text-sm text-red-500">{{ error:subject }}</p>
-                    {{ /if }}
-                </div>
-
-                <!-- Priority Field -->
-                <div>
-                    <label for="priority" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">
-                        Priority
-                    </label>
-                    <select
-                        name="priority"
-                        id="priority"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    >
-                        <option value="normal" {{ if old:priority == 'normal' || !old:priority }}selected{{ /if }}>Normal</option>
-                        <option value="low" {{ if old:priority == 'low' }}selected{{ /if }}>Low</option>
-                        <option value="high" {{ if old:priority == 'high' }}selected{{ /if }}>High</option>
-                        <option value="urgent" {{ if old:priority == 'urgent' }}selected{{ /if }}>Urgent</option>
-                    </select>
-                    {{ if error:priority }}
-                        <p class="mt-1 text-sm text-red-500">{{ error:priority }}</p>
                     {{ /if }}
                 </div>
 

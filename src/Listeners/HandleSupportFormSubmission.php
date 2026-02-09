@@ -80,11 +80,8 @@ class HandleSupportFormSubmission
     protected function mapFormFields(array $data): array
     {
         $fieldMapping = config('support.field_mapping', [
-            'name' => 'name',
             'email' => 'email',
-            'subject' => 'subject',
             'message' => 'message',
-            'priority' => 'priority',
         ]);
 
         $mapped = [];

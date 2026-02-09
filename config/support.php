@@ -46,12 +46,6 @@ return [
             'channel' => env('KAYAKO_CHANNEL', 'MAIL'),
             'channel_id' => env('KAYAKO_CHANNEL_ID', 1),
             'timeout' => env('KAYAKO_TIMEOUT', 30),
-            'priority_mapping' => [
-                'low' => 1,
-                'normal' => 2,
-                'high' => 3,
-                'urgent' => 4,
-            ],
         ],
 
     ],
@@ -80,11 +74,8 @@ return [
     */
 
     'field_mapping' => [
-        'name' => 'name',
         'email' => 'email',
-        'subject' => 'subject',
         'message' => 'message',
-        'priority' => 'priority',
     ],
 
     /*

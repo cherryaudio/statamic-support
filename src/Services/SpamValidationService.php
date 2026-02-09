@@ -91,9 +91,7 @@ class SpamValidationService
     public function validate(array $data): array
     {
         $textToCheck = implode(' ', [
-            $data['name'] ?? '',
             $data['email'] ?? '',
-            $data['subject'] ?? '',
             $data['message'] ?? '',
         ]);
 
@@ -119,15 +117,6 @@ class SpamValidationService
             }
         }
 
-        // Check for suspicious name patterns
-        if ($this->hasSuspiciousName($data['name'] ?? '')) {
-            $this->logSpamAttempt($data, 'Suspicious name pattern');
-            return [
-                'is_spam' => true,
-                'reason' => 'suspicious_name',
-            ];
-        }
-
         // Check for message length
         $messageLength = strlen($data['message'] ?? '');
         $minLength = $this->config['min_message_length'] ?? 10;
@@ -148,66 +137,10 @@ class SpamValidationService
             ];
         }
 
-        // Check for gibberish names
-        if ($this->isGibberish($data['name'] ?? '')) {
-            $this->logSpamAttempt($data, 'Gibberish name detected');
-            return [
-                'is_spam' => true,
-                'reason' => 'gibberish_name',
-            ];
-        }
-
         return [
             'is_spam' => false,
             'reason' => null,
         ];
-    }
-
-    /**
-     * Check if a name looks suspicious.
-     *
-     * @param string $name
-     * @return bool
-     */
-    protected function hasSuspiciousName(string $name): bool
-    {
-        // Name is all numbers
-        if (preg_match('/^[\d\s]+$/', $name)) {
-            return true;
-        }
-
-        // Name contains URL
-        if (preg_match('/https?:\/\//', $name)) {
-            return true;
-        }
-
-        // Name is too long
-        if (strlen($name) > 100) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Basic gibberish detection for names.
-     *
-     * @param string $text
-     * @return bool
-     */
-    protected function isGibberish(string $text): bool
-    {
-        // Check for excessive consonant clusters (unlikely in real names)
-        if (preg_match('/[bcdfghjklmnpqrstvwxyz]{6,}/i', $text)) {
-            return true;
-        }
-
-        // Check for random character patterns
-        if (preg_match('/^[a-z]{2,3}\d+[a-z]*$/i', $text)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
