@@ -3,16 +3,14 @@
 namespace Acoustica\StatamicSupport\Providers;
 
 use Acoustica\StatamicSupport\Contracts\SupportProvider;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class KayakoProvider implements SupportProvider
 {
     protected string $baseUrl;
-    protected string $clientId;
-    protected string $clientSecret;
-    protected string $scopes;
+    protected string $email;
+    protected string $password;
     protected int $timeout;
     protected array $config;
 
@@ -20,9 +18,8 @@ class KayakoProvider implements SupportProvider
     {
         $this->config = $config;
         $this->baseUrl = rtrim($config['url'] ?? '', '/');
-        $this->clientId = $config['client_id'] ?? '';
-        $this->clientSecret = $config['client_secret'] ?? '';
-        $this->scopes = $config['scopes'] ?? 'users conversations';
+        $this->email = $config['email'] ?? '';
+        $this->password = $config['password'] ?? '';
         $this->timeout = $config['timeout'] ?? 30;
     }
 
@@ -34,53 +31,13 @@ class KayakoProvider implements SupportProvider
     public function isConfigured(): bool
     {
         return !empty($this->baseUrl)
-            && !empty($this->clientId)
-            && !empty($this->clientSecret);
-    }
-
-    protected function getAccessToken(): string
-    {
-        $cached = Cache::get('kayako_oauth_token');
-
-        if ($cached) {
-            return $cached;
-        }
-
-        $response = Http::asForm()
-            ->timeout($this->timeout)
-            ->post("{$this->baseUrl}/oauth/token", [
-                'grant_type' => 'client_credentials',
-                'client_id' => $this->clientId,
-                'client_secret' => $this->clientSecret,
-                'scope' => $this->scopes,
-            ]);
-
-        if (!$response->successful()) {
-            Log::error('Kayako OAuth token request failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-            throw new \Exception('Failed to obtain Kayako OAuth access token: ' . $response->body());
-        }
-
-        $data = $response->json();
-        $token = $data['access_token'] ?? null;
-        $expiresIn = $data['expires_in'] ?? 3600;
-
-        if (!$token) {
-            throw new \Exception('Kayako OAuth response did not contain an access token.');
-        }
-
-        // Cache for expires_in minus 60 seconds to account for clock skew
-        $cacheTtl = max($expiresIn - 60, 0);
-        Cache::put('kayako_oauth_token', $token, $cacheTtl);
-
-        return $token;
+            && !empty($this->email)
+            && !empty($this->password);
     }
 
     protected function httpClient(): \Illuminate\Http\Client\PendingRequest
     {
-        return Http::withToken($this->getAccessToken())->timeout($this->timeout);
+        return Http::withBasicAuth($this->email, $this->password)->timeout($this->timeout);
     }
 
     public function createCase(array $data): array
