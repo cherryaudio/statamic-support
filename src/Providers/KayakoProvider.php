@@ -69,7 +69,7 @@ class KayakoProvider implements SupportProvider
                 continue;
             }
 
-            $request = $request->attach('files[]', file_get_contents($filePath), $filename);
+            $request = $request->attach('attachment', file_get_contents($filePath), $filename);
         }
 
         $response = $request->post("{$this->baseUrl}/api/v1/cases.json", $caseData);
