@@ -55,7 +55,6 @@ class KayakoProvider implements SupportProvider
             'requester_id' => $requester['id'],
             'channel' => $this->config['channel'] ?? 'MAIL',
             'channel_id' => $this->config['channel_id'] ?? 1,
-            'channel_options' => json_encode(['html' => true]),
         ];
 
         $request = $this->httpClient();
