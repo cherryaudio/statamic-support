@@ -92,7 +92,7 @@ return [
     'attachments' => [
         'max_files' => env('SUPPORT_ATTACHMENTS_MAX_FILES', 3),
         'max_file_size' => env('SUPPORT_ATTACHMENTS_MAX_SIZE', 10240), // 10MB in KB
-        'allowed_extensions' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt', 'rtf', 'zip', 'mp3', 'wav', 'ogg', 'flac', 'mp4', 'mov'],
+        'allowed_extensions' => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt', 'rtf', 'zip', 'mp3', 'wav', 'ogg', 'flac', 'mp4', 'mov'],
         'asset_container' => env('SUPPORT_ATTACHMENTS_CONTAINER', 'support_attachments'),
         'cleanup_after_upload' => true,
     ],

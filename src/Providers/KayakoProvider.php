@@ -47,14 +47,7 @@ class KayakoProvider implements SupportProvider
         }
 
         $requester = $this->findOrCreateRequester($data['email']);
-
-        // Upload attachments first if any
-        $attachmentFileIds = [];
         $resolvedAttachments = $data['resolved_attachments'] ?? [];
-
-        if (!empty($resolvedAttachments)) {
-            $attachmentFileIds = $this->uploadFiles($resolvedAttachments);
-        }
 
         $caseData = [
             'subject' => 'Support Request',
@@ -62,15 +55,25 @@ class KayakoProvider implements SupportProvider
             'requester_id' => $requester['id'],
             'channel' => $this->config['channel'] ?? 'MAIL',
             'channel_id' => $this->config['channel_id'] ?? 1,
-            'channel_options' => ['html' => true],
+            'channel_options' => json_encode(['html' => true]),
         ];
 
-        if (!empty($attachmentFileIds)) {
-            $caseData['attachment_file_ids'] = implode(',', $attachmentFileIds);
+        $request = $this->httpClient();
+
+        // Attach files directly to the case creation request
+        foreach ($resolvedAttachments as $attachment) {
+            $filePath = $attachment['path'];
+            $filename = $attachment['filename'];
+
+            if (!file_exists($filePath)) {
+                Log::warning('Kayako: attachment file not found, skipping', ['path' => $filePath]);
+                continue;
+            }
+
+            $request = $request->attach('files[]', file_get_contents($filePath), $filename);
         }
 
-        $response = $this->httpClient()
-            ->post("{$this->baseUrl}/api/v1/cases.json", $caseData);
+        $response = $request->post("{$this->baseUrl}/api/v1/cases.json", $caseData);
 
         if (!$response->successful()) {
             Log::error('Kayako API error', [
@@ -196,55 +199,6 @@ class KayakoProvider implements SupportProvider
         ]);
 
         throw new \Exception('Failed to find or create requester in Kayako');
-    }
-
-    /**
-     * Upload files to Kayako and return their file IDs.
-     */
-    protected function uploadFiles(array $attachments): array
-    {
-        $fileIds = [];
-
-        foreach ($attachments as $attachment) {
-            $filePath = $attachment['path'];
-            $filename = $attachment['filename'];
-
-            if (!file_exists($filePath)) {
-                Log::warning('Kayako: attachment file not found, skipping', ['path' => $filePath]);
-                continue;
-            }
-
-            $response = $this->httpClient()
-                ->attach('files[]', file_get_contents($filePath), $filename)
-                ->post("{$this->baseUrl}/api/v1/files.json");
-
-            if ($response->successful()) {
-                $fileData = $response->json('data');
-
-                if (!empty($fileData)) {
-                    // The API may return a single file or an array of files
-                    $files = isset($fileData['id']) ? [$fileData] : $fileData;
-
-                    foreach ($files as $file) {
-                        if (!empty($file['id'])) {
-                            $fileIds[] = $file['id'];
-                            Log::info('Kayako: file uploaded', [
-                                'filename' => $filename,
-                                'kayako_file_id' => $file['id'],
-                            ]);
-                        }
-                    }
-                }
-            } else {
-                Log::error('Kayako: file upload failed', [
-                    'filename' => $filename,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-            }
-        }
-
-        return $fileIds;
     }
 
     protected function formatContents(array $data): string
