@@ -82,12 +82,14 @@ class SubmitToKayakoJob implements ShouldQueue
     protected function resolveAttachments(array $assetIds): array
     {
         $resolved = [];
+        $container = config('support.attachments.asset_container', 'support_attachments');
 
         foreach ($assetIds as $assetId) {
-            $asset = Asset::find($assetId);
+            $fullId = str_contains($assetId, '::') ? $assetId : "{$container}::{$assetId}";
+            $asset = Asset::find($fullId);
 
             if (!$asset) {
-                Log::warning('Support: attachment asset not found', ['asset_id' => $assetId]);
+                Log::warning('Support: attachment asset not found', ['asset_id' => $assetId, 'resolved_id' => $fullId]);
                 continue;
             }
 
@@ -111,8 +113,11 @@ class SubmitToKayakoJob implements ShouldQueue
             return;
         }
 
+        $container = config('support.attachments.asset_container', 'support_attachments');
+
         foreach ($assetIds as $assetId) {
-            $asset = Asset::find($assetId);
+            $fullId = str_contains($assetId, '::') ? $assetId : "{$container}::{$assetId}";
+            $asset = Asset::find($fullId);
 
             if ($asset) {
                 $asset->delete();
