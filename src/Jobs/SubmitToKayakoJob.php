@@ -9,6 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Statamic\Facades\Asset;
 
 class SubmitToKayakoJob implements ShouldQueue
 {
@@ -27,7 +28,7 @@ class SubmitToKayakoJob implements ShouldQueue
     /**
      * The maximum number of seconds the job can run.
      */
-    public int $timeout = 60;
+    public int $timeout = 120;
 
     /**
      * Create a new job instance.
@@ -49,13 +50,19 @@ class SubmitToKayakoJob implements ShouldQueue
         }
 
         try {
-            $response = $provider->createCase($this->data);
+            $data = $this->data;
+            $data['resolved_attachments'] = $this->resolveAttachments($data['attachments'] ?? []);
+
+            $response = $provider->createCase($data);
 
             Log::info('Support: case created via queue', [
                 'provider' => $provider->getName(),
                 'case_id' => $response['id'] ?? 'unknown',
                 'email' => $this->data['email'],
+                'attachments' => count($data['resolved_attachments']),
             ]);
+
+            $this->cleanupAttachments($data['attachments'] ?? []);
         } catch (\Exception $e) {
             Log::error('Support: queued job failed to create case', [
                 'provider' => $provider->getName(),
@@ -66,6 +73,51 @@ class SubmitToKayakoJob implements ShouldQueue
 
             // Re-throw to trigger retry
             throw $e;
+        }
+    }
+
+    /**
+     * Resolve asset IDs to file paths, filenames, and MIME types.
+     */
+    protected function resolveAttachments(array $assetIds): array
+    {
+        $resolved = [];
+
+        foreach ($assetIds as $assetId) {
+            $asset = Asset::find($assetId);
+
+            if (!$asset) {
+                Log::warning('Support: attachment asset not found', ['asset_id' => $assetId]);
+                continue;
+            }
+
+            $resolved[] = [
+                'path' => $asset->resolvedPath(),
+                'filename' => $asset->basename(),
+                'mime_type' => $asset->mimeType(),
+                'asset_id' => $assetId,
+            ];
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Delete local assets after successful upload to the provider.
+     */
+    protected function cleanupAttachments(array $assetIds): void
+    {
+        if (!config('support.attachments.cleanup_after_upload', true)) {
+            return;
+        }
+
+        foreach ($assetIds as $assetId) {
+            $asset = Asset::find($assetId);
+
+            if ($asset) {
+                $asset->delete();
+                Log::debug('Support: cleaned up attachment asset', ['asset_id' => $assetId]);
+            }
         }
     }
 

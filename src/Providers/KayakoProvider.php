@@ -48,6 +48,14 @@ class KayakoProvider implements SupportProvider
 
         $requester = $this->findOrCreateRequester($data['email']);
 
+        // Upload attachments first if any
+        $attachmentFileIds = [];
+        $resolvedAttachments = $data['resolved_attachments'] ?? [];
+
+        if (!empty($resolvedAttachments)) {
+            $attachmentFileIds = $this->uploadFiles($resolvedAttachments);
+        }
+
         $caseData = [
             'subject' => 'Support Request',
             'contents' => $this->formatContents($data),
@@ -56,6 +64,10 @@ class KayakoProvider implements SupportProvider
             'channel_id' => $this->config['channel_id'] ?? 1,
             'channel_options' => ['html' => true],
         ];
+
+        if (!empty($attachmentFileIds)) {
+            $caseData['attachment_file_ids'] = implode(',', $attachmentFileIds);
+        }
 
         $response = $this->httpClient()
             ->post("{$this->baseUrl}/api/v1/cases.json", $caseData);
@@ -186,12 +198,66 @@ class KayakoProvider implements SupportProvider
         throw new \Exception('Failed to find or create requester in Kayako');
     }
 
+    /**
+     * Upload files to Kayako and return their file IDs.
+     */
+    protected function uploadFiles(array $attachments): array
+    {
+        $fileIds = [];
+
+        foreach ($attachments as $attachment) {
+            $filePath = $attachment['path'];
+            $filename = $attachment['filename'];
+
+            if (!file_exists($filePath)) {
+                Log::warning('Kayako: attachment file not found, skipping', ['path' => $filePath]);
+                continue;
+            }
+
+            $response = $this->httpClient()
+                ->attach('files[]', file_get_contents($filePath), $filename)
+                ->post("{$this->baseUrl}/api/v1/files.json");
+
+            if ($response->successful()) {
+                $fileData = $response->json('data');
+
+                if (!empty($fileData)) {
+                    // The API may return a single file or an array of files
+                    $files = isset($fileData['id']) ? [$fileData] : $fileData;
+
+                    foreach ($files as $file) {
+                        if (!empty($file['id'])) {
+                            $fileIds[] = $file['id'];
+                            Log::info('Kayako: file uploaded', [
+                                'filename' => $filename,
+                                'kayako_file_id' => $file['id'],
+                            ]);
+                        }
+                    }
+                }
+            } else {
+                Log::error('Kayako: file upload failed', [
+                    'filename' => $filename,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            }
+        }
+
+        return $fileIds;
+    }
+
     protected function formatContents(array $data): string
     {
         $contents = e($data['message']);
 
         $contents .= "\n\n---\nSubmitted via Support Contact Form";
         $contents .= "\nEmail: " . e($data['email']);
+
+        $attachmentCount = count($data['resolved_attachments'] ?? []);
+        if ($attachmentCount > 0) {
+            $contents .= "\nAttachments: " . $attachmentCount . ' file' . ($attachmentCount !== 1 ? 's' : '');
+        }
 
         return nl2br($contents);
     }

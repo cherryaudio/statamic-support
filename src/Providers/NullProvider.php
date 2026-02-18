@@ -23,8 +23,11 @@ class NullProvider implements SupportProvider
 
     public function createCase(array $data): array
     {
+        $attachmentCount = count($data['resolved_attachments'] ?? []);
+
         Log::info('Support case created (NullProvider - not sent to external service)', [
             'email' => $data['email'],
+            'attachments' => $attachmentCount,
         ]);
 
         return [

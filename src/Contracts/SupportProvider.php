@@ -15,6 +15,8 @@ interface SupportProvider
      * @param array $data Case data including:
      *   - email: string
      *   - message: string
+     *   - attachments: array (optional) Asset IDs
+     *   - resolved_attachments: array (optional) Resolved file data with path, filename, mime_type
      * @return array Response data with at least 'id' key
      * @throws \Exception If the request fails
      */

@@ -30,3 +30,15 @@ sections:
             - required
             - 'min:10'
           instructions: 'Please describe your issue or question in detail.'
+      -
+        handle: attachments
+        field:
+          type: assets
+          display: Attachments
+          container: support_attachments
+          max_files: 3
+          icon: assets
+          listable: hidden
+          instructions_position: above
+          visibility: visible
+          instructions: 'Attach up to 3 files (screenshots, documents, audio files).'

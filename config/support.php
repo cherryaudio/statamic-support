@@ -75,6 +75,26 @@ return [
     'field_mapping' => [
         'email' => 'email',
         'message' => 'message',
+        'attachments' => 'attachments',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Attachments
+    |--------------------------------------------------------------------------
+    |
+    | Configure file attachment settings for support form submissions.
+    | Uploaded files are stored in the specified asset container and
+    | pushed to the support provider when creating a case.
+    |
+    */
+
+    'attachments' => [
+        'max_files' => env('SUPPORT_ATTACHMENTS_MAX_FILES', 3),
+        'max_file_size' => env('SUPPORT_ATTACHMENTS_MAX_SIZE', 10240), // 10MB in KB
+        'allowed_extensions' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt', 'rtf', 'zip', 'mp3', 'wav', 'ogg', 'flac', 'mp4', 'mov'],
+        'asset_container' => env('SUPPORT_ATTACHMENTS_CONTAINER', 'support_attachments'),
+        'cleanup_after_upload' => true,
     ],
 
     /*
@@ -98,7 +118,7 @@ return [
         'min_message_length' => 10,
 
         // Maximum message length (messages longer than this are rejected)
-        'max_message_length' => 10000,
+        'max_message_length' => 50000,
 
         // Additional spam patterns (regex) - merged with defaults
         'patterns' => [

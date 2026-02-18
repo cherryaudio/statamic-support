@@ -22,12 +22,14 @@ class InstallCommand extends Command
         $this->publishBlueprints();
         $this->publishForms();
         $this->publishFieldsets();
+        $this->publishAssetContainer();
 
         if (!$this->option('without-page')) {
             $this->publishPage();
         }
 
         $this->displayEnvInstructions();
+        $this->displayFilesystemInstructions();
 
         $this->newLine();
         $this->info('Statamic Support installed successfully!');
@@ -135,6 +137,49 @@ class InstallCommand extends Command
         File::put($destination, $content);
 
         $this->components->task('Creating support contact page');
+    }
+
+    protected function publishAssetContainer()
+    {
+        $destination = base_path('content/assets/support_attachments.yaml');
+
+        if (File::exists($destination) && !$this->option('force')) {
+            $this->components->warn('Asset container already exists, skipping (use --force to overwrite)');
+            return;
+        }
+
+        File::ensureDirectoryExists(dirname($destination));
+
+        $yaml = <<<'YAML'
+title: 'Support Attachments'
+disk: support-attachments
+allow_uploads: true
+allow_downloading: true
+allow_renaming: false
+allow_moving: false
+YAML;
+
+        File::put($destination, $yaml);
+
+        $this->components->task('Publishing asset container');
+    }
+
+    protected function displayFilesystemInstructions()
+    {
+        $this->newLine();
+        $this->components->info('Add this filesystem disk to config/filesystems.php under "disks":');
+        $this->newLine();
+
+        $diskConfig = <<<'PHP'
+'support-attachments' => [
+    'driver' => 'local',
+    'root' => storage_path('app/support-attachments'),
+    'url' => '/storage/support-attachments',
+    'visibility' => 'private',
+],
+PHP;
+
+        $this->line($diskConfig);
     }
 
     protected function displayEnvInstructions()

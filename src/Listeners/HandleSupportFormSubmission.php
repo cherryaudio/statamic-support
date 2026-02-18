@@ -51,6 +51,7 @@ class HandleSupportFormSubmission
             // Mark as spam so staff can review, but skip Kayako dispatch
             $event->submission->set('is_spam', true);
             $event->submission->set('spam_reason', $spamResult['reason']);
+            $event->submission->save();
 
             return;
         }
@@ -90,6 +91,15 @@ class HandleSupportFormSubmission
             if (isset($data[$formField])) {
                 $mapped[$expectedKey] = $data[$formField];
             }
+        }
+
+        // Normalize attachments to always be an array
+        if (isset($mapped['attachments'])) {
+            $mapped['attachments'] = is_array($mapped['attachments'])
+                ? $mapped['attachments']
+                : [$mapped['attachments']];
+        } else {
+            $mapped['attachments'] = [];
         }
 
         return $mapped;
